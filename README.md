@@ -24,7 +24,10 @@ Mac標準で入ってるPythonはバージョンが古いので、3.11系以降�
 
 以下のライブラリの導入は必須ですので、pipコマンド等でインストールお願いします。
 
-`pip install python-dotenv setuptools pandas websockets`
+- python-dotenv
+- setuptools
+- pandas
+- websockets
 
 # Requirement
 
