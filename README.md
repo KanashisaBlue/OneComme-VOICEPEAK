@@ -90,8 +90,8 @@ https://x.com/KanashisaBlue
 
 # Revision history
 
-v1.0.1 わんコメと重複する機能を削除
-v1.0.0 リリース
+v1.0.1 2023/12/10 わんコメと重複する機能を削除  
+v1.0.0 2023/12/10 リリース
 
 # Author
 
