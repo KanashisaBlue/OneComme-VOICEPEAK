@@ -83,12 +83,12 @@ async def ws_recv(websocket):
 
                     if read_command_result == 0:
                         #キューに追加する（別スレッドでデキューする）
-                        comment_que.put(comment_id)
+                        comment_que.put((comment_id, data["params"][0]["volume"]))
                         break
                     elif i == config.MAX_RETRY - 1:
                         if config.DEBUG_FLAG:
                             print('ファイル作成失敗 ' + str(i + 1) + '回目')
-                        comment_que.put('__commentfile_make_faild')
+                        comment_que.put((comment_id, data["params"][0]["volume"]))
                         break
                     else:
                         if config.DEBUG_FLAG:
@@ -124,15 +124,21 @@ def func_read():
         #キューに入ってるファイルを一つづつ読み上げる
         while True:
 
+            #コメントのキューを取得
+            comment_tuple = comment_que.get()
+
             #読み上げファイル存在チェック
-            read_file_path = config.OUTPUT_VOICE_DIRPATH + '/vp_' + str(comment_que.get()) + '.wav'
+            read_file_path = config.OUTPUT_VOICE_DIRPATH + '/vp_' + str(comment_tuple[0]) + '.wav'
             is_file = os.path.isfile(read_file_path)
+
+            #読み上げ音量（.envの設定にわんコメのスライダーと.envの設定を掛け合わせる）
+            read_volume = str(round(float(comment_tuple[1]) * float(config.VOICE_VOLUME), 2));
 
             if is_file:
                 if config.DEBUG_FLAG:
-                    subprocess.call([config.AFPLAY_FILEPATH + ' ' + read_file_path + ' -v ' + str(config.VOICE_VOLUME)], shell = True)
+                    subprocess.call([config.AFPLAY_FILEPATH + ' ' + read_file_path + ' -v ' + read_volume], shell = True)
                 else:
-                    subprocess.call([config.AFPLAY_FILEPATH + ' ' + read_file_path + ' -v ' + str(config.VOICE_VOLUME)], shell = True, stderr = subprocess.PIPE)
+                    subprocess.call([config.AFPLAY_FILEPATH + ' ' + read_file_path + ' -v ' + read_volume], shell = True, stderr = subprocess.PIPE)
 
                 #読み上げファイルを削除
                 os.remove(read_file_path)
@@ -146,9 +152,9 @@ def func_read():
                 is_file = os.path.isfile(config.EXCEPTION_OUTPUT_VOICE_FILEPATH)
                 if is_file:
                     if config.DEBUG_FLAG:
-                        subprocess.call([config.AFPLAY_FILEPATH + ' ' + config.EXCEPTION_OUTPUT_VOICE_FILEPATH + ' -v ' + str(config.VOICE_VOLUME)], shell = True)
+                        subprocess.call([config.AFPLAY_FILEPATH + ' ' + config.EXCEPTION_OUTPUT_VOICE_FILEPATH + ' -v ' + read_volume], shell = True)
                     else:
-                        subprocess.call([config.AFPLAY_FILEPATH + ' ' + config.EXCEPTION_OUTPUT_VOICE_FILEPATH + ' -v ' + str(config.VOICE_VOLUME)], shell = True, stderr = subprocess.PIPE)
+                        subprocess.call([config.AFPLAY_FILEPATH + ' ' + config.EXCEPTION_OUTPUT_VOICE_FILEPATH + ' -v ' + read_volume], shell = True, stderr = subprocess.PIPE)
                 else:
                     if config.DEBUG_FLAG:
                         print('読み上げができなかった場合（エラー等）に読み上げるwavファイルがないので無音です。読み上げ失敗用のwavファイルを用意し、.envのEXCEPTION_OUTPUT_VOICE_FILEPATHを設定してください')
