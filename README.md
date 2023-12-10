@@ -2,13 +2,15 @@
 
 # Overview
 
-コメントビューアのわんコメと、読み上げソフトのVOICEPEAKを連携するpythonスクリプトです。  
+コメントビューアのわんコメと、読み上げソフトのVOICEPEAKを連携するPythonスクリプトです。  
 わんコメのコメントの読み上げをVOICEPEAKのキレイな読み上げで読ませることができます。  
 
 Windowsを利用されている方は「ゆかコネNEO」を利用された方が手軽かと思いますので、そちらをご利用ください。  
 https://nmori.github.io/yncneo-Docs/
 
-このスクリプトはゆかコネNEOが利用できない環境（macOS）の利用を想定しています。
+このスクリプトはゆかコネNEOが利用できない環境（macOS）の利用を想定しています。  
+
+わんコメ、VOICEPEAKともに非公認の野良スクリプトです。両アプリのいずれかで仕様変更が起きた場合、動かなくなる恐れがあります。バージョンアップ等を経緯にして動かなくなった場合、このページの最下部にある連絡先から連絡ください。
 
 # Environment
 
@@ -41,7 +43,7 @@ https://onecomme.com/
 https://onecomme.com/terms/
 
 #### ■VOICEPEAK 商用可能6ナレーターセット（コマンドラインでの読み上げに対応したアプリケーション及びバージョン）
-（バージョン1.2.7で動作確認済み。ただし、バージョン1.2.5だと不具合があるので、1.2.6以降にしてください）
+（バージョン1.2.7で動作確認済み。ただし、バージョン1.2.5だと不具合があるので、バージョン1.2.6以降にしてください）
 
 VOICEPEAK 商用可能6ナレーターセット  
 https://www.ah-soft.com/voice/6nare/
@@ -53,7 +55,7 @@ https://www.ah-soft.com/voice/6nare/eula.html
 
 # Usage
 
-ダウンロードして任意の場所に配置してください。  
+最新版をダウンロードして任意の場所に配置してください。  
 https://github.com/KanashisaBlue/OneComme-VOICEPEAK/archive/refs/heads/main.zip
 
 .env.example ファイルを .env にリネームして、必要に応じて内容を変更してください（変更しなくても動くとは思いますが、VOICEPEAKをデフォルトの場所以外にインストールしてる場合などは変更が必要になります）  
@@ -81,22 +83,34 @@ https://github.com/KanashisaBlue/OneComme-VOICEPEAK/archive/refs/heads/main.zip
 
 # FAQ
 
-後日追加します。
+#### ？.エラーが出て動きません
+A. 細かいサポートはしてませんので、各自ググるなどして対応してください。X（旧Twitter）にエラー内容について要点をまとめて連絡いただければ、お返事できる場合はお返事します（必ず返事することは保証できません）。
+
+#### ？.Pythonの環境構築（バージョン3.11系以降のインストール、ライブラリのインストール）が難しいです
+A. こちらも細かいサポートはできません。各自で頑張ってバージョン3.11系以降の環境を整えてください。下記のサイトが参考になるかもしれません。  
+
+pyenvでPythonをインストールする方法  
+https://tld.holy.jp/2022/12/07/install-python/  
+
+pipを使ってライブラリをインストールする方法
+https://www.sejuku.net/blog/50417
 
 # Contribution
 
-もし不具合など何か気付いたらGitHubのIssueかTwitterのDMまでお願いします。  
-https://x.com/KanashisaBlue
+もし不具合など何か気付いたらGitHubのIssueかX（旧Twitter）のDMまでお願いします。  
 
 # Revision history
 
-v1.0.2 2023/12/11 読み上げボリュームをわんコメの「連携」→「読み上げ」→「読み上げボリューム」のスライダーと連動するように変更  
-v1.0.1 2023/12/10 わんコメと重複する機能を削除  
-v1.0.0 2023/12/10 リリース
+v1.0.2 （2023/12/11） 読み上げボリュームをわんコメの「連携」→「読み上げ」→「読み上げボリューム」のスライダーと連動するように変更  
+v1.0.1 （2023/12/10） わんコメと重複する機能を削除  
+v1.0.0 （2023/12/10） リリース
 
 # Author
 
-悲しさ
+悲しさ  
+X（旧Twitter）：https://x.com/KanashisaBlue  
+ブログ：https://kanashisa.blue  
+YouTube：https://www.youtube.com/@KanashisaBlue
 
 # License
 
