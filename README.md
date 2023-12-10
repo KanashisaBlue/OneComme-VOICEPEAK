@@ -62,7 +62,7 @@ https://github.com/KanashisaBlue/OneComme-VOICEPEAK/archive/refs/heads/main.zip
 
 次にターミナルアプリ（「ターミナル」「iTerm2」など）を起動し、以下のようなコマンドでonecomme_voicepeak_threading_ws.pyのスクリプトを実行してください。
 
-`python ./onecomme_voicepeak_threading_ws.py`
+`cd [pythonスクリプトがあるディレクトリ] && python ./onecomme_voicepeak_threading_ws.py`
 
 「スクリプト起動... 読み上げ開始まで最大30秒程度おまちください...」という文字が出たまま停止します。  
 その状態でわんコメを起動してください。
