@@ -92,7 +92,7 @@ A. こちらも細かいサポートはできません。各自で頑張って�
 pyenvでPythonをインストールする方法  
 https://tld.holy.jp/2022/12/07/install-python/  
 
-pipを使ってライブラリをインストールする方法
+pipを使ってライブラリをインストールする方法  
 https://www.sejuku.net/blog/50417
 
 # Contribution
