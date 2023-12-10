@@ -88,6 +88,11 @@ https://github.com/KanashisaBlue/OneComme-VOICEPEAK/archive/refs/heads/main.zip
 もし不具合など何か気付いたらGitHubのIssueかTwitterのDMまでお願いします。  
 https://x.com/KanashisaBlue
 
+# Revision history
+
+v1.0.1 わんコメと重複する機能を削除
+v1.0.0 リリース
+
 # Author
 
 悲しさ
