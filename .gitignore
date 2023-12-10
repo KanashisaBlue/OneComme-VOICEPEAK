@@ -1,0 +1,5 @@
+*~
+.DS_Store
+.env
+ex-output.wav
+__pycache__

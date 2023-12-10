@@ -3,7 +3,7 @@
 # https://opensource.org/licenses/mit-license.php
 
 # わんコメ-VOICEPEAK 連携スクリプト
-# v1.0.0
+# v1.0.1
 
 import config
 import json
@@ -29,21 +29,7 @@ async def ws_recv(websocket):
         row[3] = len(row.name)
         return row
 
-    #アスキーアートを消す（関数内関数）
-    def StrAAReplace(str):
-        for index, item in aadb_df.iterrows():
-            if str.count(index) > 0:
-                str = str.replace(index, item.values[0])
-        return str
-
     try:
-        #AA読み上げ用データを作成
-        is_aafile = os.path.isfile(config.AA_DB_FILEPATH)
-        if is_aafile:
-            aadb_df = pd.read_table(config.AA_DB_FILEPATH, header = None, index_col = 1)
-            aadb_df = aadb_df.apply(SetIndexLen, axis = 1)
-            aadb_df = aadb_df.sort_values(3, ascending = False)
-
         print('読み上げが可能な状態です... このスクリプトを停止する場合は ctrl + c で停止してください')
         while True:
             data = json.loads(await websocket.recv())
@@ -69,10 +55,7 @@ async def ws_recv(websocket):
                 comment_id = str(uuid.uuid4())
 
                 #タグの削除（絵文字や不具合文字なども含む）
-                if is_aafile:
-                    read_comment = StrAAReplace(str(data["params"][0]["text"]).replace('&lt;', '<').replace('&gt;', '>'))
-                else:
-                    read_comment = str(data["params"][0]["text"]).replace('&lt;', '<').replace('&gt;', '>')
+                read_comment = str(data["params"][0]["text"]).replace('&lt;', '<').replace('&gt;', '>')
                 read_comment = re.compile(r"<[^>]*?>").sub(' 略 ', read_comment)
                 read_comment = read_comment.replace("｀", "")
                 read_comment = read_comment.replace("`", "")
@@ -86,10 +69,6 @@ async def ws_recv(websocket):
 
                 #URL省略
                 read_comment = re.sub('https?://[A-Za-z0-9_/:%#$&?()~.=+-]+?(?=https?:|[^A-Za-z0-9_/:%#$&?()~.=+-]|$)', ' URL略 ', read_comment)
-
-                #読み上げが長くなる場合は省略
-                if len(read_comment) > config.MAX_READ_COMMENTSTRING_NUM:
-                    read_comment = read_comment[:config.MAX_READ_COMMENTSTRING_NUM] + '、以下略'
 
                 #読み上げファイル作成コマンド作成
                 read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + config.VOICE_SPEED + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + config.VOICE_NARRATOR + '"'
