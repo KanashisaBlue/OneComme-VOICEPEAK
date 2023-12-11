@@ -39,7 +39,7 @@ Mac標準で入ってるPythonはバージョンが古いので、3.11系以降�
 配信者のためのコメントアプリ わんコメ  
 https://onecomme.com/
 
-利用に関しては利用規約の遵守をお願いします（クレジット表記など）  
+利用に関しては利用規約の遵守をお願いします（特にクレジット表記に関して）  
 https://onecomme.com/terms/
 
 #### ■VOICEPEAK 商用可能6ナレーターセット（コマンドラインでの読み上げに対応したアプリケーション及びバージョン）
@@ -64,7 +64,7 @@ https://github.com/KanashisaBlue/OneComme-VOICEPEAK/archive/refs/heads/main.zip
 
 次にターミナルアプリ（「ターミナル」「iTerm2」など）を起動し、以下のようなコマンドでonecomme_voicepeak_threading_ws.pyのスクリプトを実行してください。
 
-`cd [pythonスクリプトがあるディレクトリ] && python ./onecomme_voicepeak_threading_ws.py`
+`cd [Pythonスクリプトがあるディレクトリ] && python ./onecomme_voicepeak_threading_ws.py`
 
 「スクリプト起動... 読み上げ開始まで最大30秒程度おまちください...」という文字が出たまま停止します。  
 その状態でわんコメを起動してください。
@@ -78,6 +78,9 @@ https://github.com/KanashisaBlue/OneComme-VOICEPEAK/archive/refs/heads/main.zip
 以上の設定を行うと、ターミナル上に「読み上げが可能な状態です... このスクリプトを停止する場合は ctrl + c で停止してください」と表示され、連携に必要な最低限の設定は完了します。
 
 メニューから「コメントテスター」を起動し、「読み上げ」のチェックボックスにチェックを入れて、下の「送信」ボタンを押してコメントが読まれれば、連携は成功しています。  
+
+わんコメ側の設定についてはブログ記事を参照してください。  
+https://kanashisa.blue/2023/12/10/onecomme-voicepeak/
 
 スクリプトを終了する際は、ターミナルで ctrl + c で停止してください。
 
@@ -95,11 +98,17 @@ https://tld.holy.jp/2022/12/07/install-python/
 pipを使ってライブラリをインストールする方法  
 https://www.sejuku.net/blog/50417
 
+#### ？たまにVOICEPEAKがエラーを出す
+A. 原因がよく分からないのですが、バージョン1.2.6くらいから出るようになりました。エラーが起きた際にはリトライ処理を入れているので、エラーで読み上げられないということはほぼ発生しないはずです。
+
+#### ？スクリプトとかなんか難しい。アプリ化してほしい
+A. アプリにするほどでもないと思うが、Pythonの環境構築やターミナルの操作が難しいと感じる人は多いとおもうので、そういう要望が多ければ考えます。
+
 # Contribution
 
-もし不具合など何か気付いたらGitHubのIssueかX（旧Twitter）のDMまでお願いします。  
+もし不具合や要望などありましたらGitHubのIssueかX（旧Twitter）のDMまでお願いします。  
 
-# Revision history
+# Revision History
 
 v1.0.2 （2023/12/11） 読み上げボリュームをわんコメの「連携」→「読み上げ」→「読み上げボリューム」のスライダーと連動するように変更  
 v1.0.1 （2023/12/10） わんコメと重複する機能を削除  
