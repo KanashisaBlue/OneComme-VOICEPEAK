@@ -3,7 +3,7 @@
 # https://opensource.org/licenses/mit-license.php
 
 # わんコメ-VOICEPEAK 連携スクリプト
-# v1.0.1
+# v1.0.3
 
 import config
 import json
@@ -11,7 +11,6 @@ import os
 import re
 import unicodedata
 import subprocess
-import pandas as pd
 import asyncio
 import websockets
 import uuid
