@@ -120,43 +120,43 @@ def func_make():
 #音声データ読み上げ用スレッド用関数
 def func_read():
 
-        #キューに入ってるファイルを一つづつ読み上げる
-        while True:
+    #キューに入ってるファイルを一つづつ読み上げる
+    while True:
 
-            #コメントのキューを取得
-            comment_tuple = comment_que.get()
+        #コメントのキューを取得
+        comment_tuple = comment_que.get()
 
-            #読み上げファイル存在チェック
-            read_file_path = config.OUTPUT_VOICE_DIRPATH + '/vp_' + str(comment_tuple[0]) + '.wav'
-            is_file = os.path.isfile(read_file_path)
+        #読み上げファイル存在チェック
+        read_file_path = config.OUTPUT_VOICE_DIRPATH + '/vp_' + str(comment_tuple[0]) + '.wav'
+        is_file = os.path.isfile(read_file_path)
 
-            #読み上げ音量（.envの設定にわんコメのスライダーと.envの設定を掛け合わせる）
-            read_volume = str(round(float(comment_tuple[1]) * float(config.VOICE_VOLUME), 2));
+        #読み上げ音量（.envの設定にわんコメのスライダーと.envの設定を掛け合わせる）
+        read_volume = str(round(float(comment_tuple[1]) * float(config.VOICE_VOLUME), 2));
 
+        if is_file:
+            if config.DEBUG_FLAG:
+                subprocess.call([config.AFPLAY_FILEPATH + ' ' + read_file_path + ' -v ' + read_volume], shell = True)
+            else:
+                subprocess.call([config.AFPLAY_FILEPATH + ' ' + read_file_path + ' -v ' + read_volume], shell = True, stderr = subprocess.PIPE)
+
+            #読み上げファイルを削除
+            os.remove(read_file_path)
+
+        #ファイルが存在しない場合はエラーメッセージを読み上げる
+        else:
+            if config.DEBUG_FLAG:
+                print('読み上げ実行失敗。以下のファイルが存在していません')
+                print(read_file_path)
+            
+            is_file = os.path.isfile(config.EXCEPTION_OUTPUT_VOICE_FILEPATH)
             if is_file:
                 if config.DEBUG_FLAG:
-                    subprocess.call([config.AFPLAY_FILEPATH + ' ' + read_file_path + ' -v ' + read_volume], shell = True)
+                    subprocess.call([config.AFPLAY_FILEPATH + ' ' + config.EXCEPTION_OUTPUT_VOICE_FILEPATH + ' -v ' + read_volume], shell = True)
                 else:
-                    subprocess.call([config.AFPLAY_FILEPATH + ' ' + read_file_path + ' -v ' + read_volume], shell = True, stderr = subprocess.PIPE)
-
-                #読み上げファイルを削除
-                os.remove(read_file_path)
-
-            #ファイルが存在しない場合はエラーメッセージを読み上げる
+                    subprocess.call([config.AFPLAY_FILEPATH + ' ' + config.EXCEPTION_OUTPUT_VOICE_FILEPATH + ' -v ' + read_volume], shell = True, stderr = subprocess.PIPE)
             else:
                 if config.DEBUG_FLAG:
-                    print('読み上げ実行失敗。以下のファイルが存在していません')
-                    print(read_file_path)
-                
-                is_file = os.path.isfile(config.EXCEPTION_OUTPUT_VOICE_FILEPATH)
-                if is_file:
-                    if config.DEBUG_FLAG:
-                        subprocess.call([config.AFPLAY_FILEPATH + ' ' + config.EXCEPTION_OUTPUT_VOICE_FILEPATH + ' -v ' + read_volume], shell = True)
-                    else:
-                        subprocess.call([config.AFPLAY_FILEPATH + ' ' + config.EXCEPTION_OUTPUT_VOICE_FILEPATH + ' -v ' + read_volume], shell = True, stderr = subprocess.PIPE)
-                else:
-                    if config.DEBUG_FLAG:
-                        print('読み上げができなかった場合（エラー等）に読み上げるwavファイルがないので無音です。読み上げ失敗用のwavファイルを用意し、.envのEXCEPTION_OUTPUT_VOICE_FILEPATHを設定してください')
+                    print('読み上げができなかった場合（エラー等）に読み上げるwavファイルがないので無音です。読み上げ失敗用のwavファイルを用意し、.envのEXCEPTION_OUTPUT_VOICE_FILEPATHを設定してください')
 
 #メイン処理
 if __name__ == '__main__':
