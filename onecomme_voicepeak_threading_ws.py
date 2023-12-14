@@ -2,8 +2,8 @@
 # Released under the MIT license
 # https://opensource.org/licenses/mit-license.php
 
-# わんコメ-VOICEPEAK 連携スクリプト
-# v1.0.3
+# わんコメ-VOICEPEAK 連携スクリプト（非公開WebSocket API版）
+# v1.0.4
 
 import config
 import json
@@ -23,14 +23,11 @@ from queue import Queue
 # websocket受信処理
 async def ws_recv(websocket):
 
-    #アスキーアートインデックス用（関数内関数）
-    def SetIndexLen(row):
-        row[3] = len(row.name)
-        return row
-
     try:
         print('読み上げが可能な状態です... このスクリプトを停止する場合は ctrl + c で停止してください')
         while True:
+            
+            #データを受信するまで待つ（ブロッキング）
             data = json.loads(await websocket.recv())
 
             #取得したデータをコンソールに表示（デバッグモードのみ）
@@ -53,53 +50,56 @@ async def ws_recv(websocket):
                 #idを決める
                 comment_id = str(uuid.uuid4())
 
-                #タグの削除（絵文字や不具合文字なども含む）
-                read_comment = str(data["params"][0]["text"]).replace('&lt;', '<').replace('&gt;', '>')
-                read_comment = re.compile(r"<[^>]*?>").sub(' 略 ', read_comment)
-                read_comment = read_comment.replace("｀", "")
-                read_comment = read_comment.replace("`", "")
-                read_comment = read_comment.replace("\\", " ")
+                for comment_data in data["params"]:
 
-                #半角カタカナを全角カタカナに
-                read_comment = unicodedata.normalize('NFKC', read_comment)
+                    #タグの削除（絵文字や不具合文字なども含む）
+                    read_comment = str(comment_data["text"]).replace('&lt;', '<').replace('&gt;', '>')
+                    read_comment = re.compile(r"<[^>]*?>").sub(' 略 ', read_comment)
+                    read_comment = read_comment.replace("｀", "")
+                    read_comment = read_comment.replace("`", "")
+                    read_comment = read_comment.replace("\\", " ")
 
-                #コメントの改行やコーテーションを削除
-                read_comment = read_comment.replace('\n', ' ').replace('&quot;', ' ').replace('&#39;', ' ').replace('"', ' ')
+                    #半角カタカナを全角カタカナに
+                    read_comment = unicodedata.normalize('NFKC', read_comment)
 
-                #URL省略
-                read_comment = re.sub('https?://[A-Za-z0-9_/:%#$&?()~.=+-]+?(?=https?:|[^A-Za-z0-9_/:%#$&?()~.=+-]|$)', ' URL略 ', read_comment)
+                    #コメントの改行やコーテーションを削除
+                    read_comment = read_comment.replace('\n', ' ').replace('&quot;', ' ').replace('&#39;', ' ').replace('"', ' ')
 
-                #読み上げファイル作成コマンド作成
-                read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + config.VOICE_SPEED + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + config.VOICE_NARRATOR + '"'
+                    #URL省略
+                    read_comment = re.sub('https?://[A-Za-z0-9_/:%#$&?()~.=+-]+?(?=https?:|[^A-Za-z0-9_/:%#$&?()~.=+-]|$)', ' URL略 ', read_comment)
 
-                #読み上げファイル作成
-                for i in range(config.MAX_RETRY):
-                    if config.DEBUG_FLAG:
-                        #read_command_result = 1 #失敗テスト用
-                        read_command_result = subprocess.call([read_command], shell = True)
-                    else:
-                        read_command_result = subprocess.call([read_command], shell = True, stderr = subprocess.PIPE)
+                    #読み上げファイル作成コマンド作成
+                    read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + config.VOICE_SPEED + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + config.VOICE_NARRATOR + '"'
 
-                    if read_command_result == 0:
-                        #キューに追加する（別スレッドでデキューする）
-                        comment_que.put((comment_id, data["params"][0]["volume"]))
-                        break
-                    elif i == config.MAX_RETRY - 1:
+                    #読み上げファイル作成
+                    for i in range(config.MAX_RETRY):
                         if config.DEBUG_FLAG:
-                            print('ファイル作成失敗 ' + str(i + 1) + '回目')
-                        comment_que.put((comment_id, data["params"][0]["volume"]))
-                        break
-                    else:
-                        if config.DEBUG_FLAG:
-                            print('ファイル作成失敗 ' + str(i + 1) + '回目')
-                            print(read_command)
-                        time.sleep(0.5)
+                            #read_command_result = 1 #失敗テスト用
+                            read_command_result = subprocess.call([read_command], shell = True)
+                        else:
+                            read_command_result = subprocess.call([read_command], shell = True, stderr = subprocess.PIPE)
 
-                #一応、クライアントに返す（意味ないカモだけど）
-                await websocket.send('{"operation":"speech","status":"sended","id":"' + comment_id + '","text":"' + str(data["params"][0]["text"]) + '","talker":"' + str(data["params"][0]["talker"]) + '"}')
+                        if read_command_result == 0:
+                            #キューに追加する（別スレッドでデキューする）
+                            comment_que.put((comment_id, comment_data["volume"]))
+                            break
+                        elif i == config.MAX_RETRY - 1:
+                            if config.DEBUG_FLAG:
+                                print('ファイル作成失敗 ' + str(i + 1) + '回目')
+                            comment_que.put((comment_id, comment_data["volume"]))
+                            break
+                        else:
+                            if config.DEBUG_FLAG:
+                                print('ファイル作成失敗 ' + str(i + 1) + '回目')
+                                print(read_command)
+                            time.sleep(0.5)
+
+                    #一応、クライアントに返す（意味ないカモだけど）
+                    await websocket.send('{"operation":"speech","status":"sended","id":"' + comment_id + '","text":"' + str(comment_data["text"]) + '","talker":"' + str(comment_data["talker"]) + '"}')
 
     except Exception as e:
-        print(f"わんコメの終了を検知しました。このスクリプトをctrl + cで終了してください。\"{e}\"")
+        print('このスクリプトの異常動作もしくはわんコメのアプリケーション終了を検知しました。このスクリプトをctrl + cで終了してください')
+        print(f"\"{e}\"")
 
 # websocket接続処理
 async def ws_connect():
@@ -109,7 +109,8 @@ async def ws_connect():
             await asyncio.Future()
 
     except Exception as e:
-        print(f"websocketの接続ができません。このスクリプトをctrl + cで終了してください。\"{e}\"")
+        print('WebSocketの接続ができません。このスクリプトをctrl + cで一度終了し、わんコメを立ち上げてから再度起動してください。')
+        print(f"\"{e}\"")
 
 # 音声データ作成用スレッド用関数
 def func_make():
@@ -123,7 +124,7 @@ def func_read():
     #キューに入ってるファイルを一つづつ読み上げる
     while True:
 
-        #コメントのキューを取得
+        #コメントのキューを取得するまで待つ（キューが空になるとブロッキング）
         comment_tuple = comment_que.get()
 
         #読み上げファイル存在チェック
