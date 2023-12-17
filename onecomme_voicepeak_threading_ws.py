@@ -2,8 +2,8 @@
 # Released under the MIT license
 # https://opensource.org/licenses/mit-license.php
 
-# わんコメ-VOICEPEAK 連携スクリプト（非公開WebSocket API版）
-# v1.0.4
+# わんコメ-VOICEPEAK 連携スクリプト（公開WebSocket API版 / わんコメ バージョン5以降をご利用ください）
+# v2.0.0
 
 import config
 import json
@@ -25,78 +25,97 @@ async def ws_recv(websocket):
 
     try:
         print('読み上げが可能な状態です... このスクリプトを停止する場合は ctrl + c で停止してください')
+
+        voice_volume = config.VOICE_VOLUME
+        voice_speed = '100'
+        voice_pitch = '0'
+
         while True:
             
             #データを受信するまで待つ（ブロッキング）
             data = json.loads(await websocket.recv())
 
-            #取得したデータをコンソールに表示（デバッグモードのみ）
-            if config.DEBUG_FLAG:
-                print(data)
+            if data['type'] == 'connected':
+                if config.DEBUG_FLAG:
+                    print('わんコネからの接続情報を確認しました')
 
-            #受信データごとに処理を分ける
-            if data['operation'] == 'speech.getVoiceList':
-                try:
-                    await websocket.send('{"operation":"speech.getVoiceList","status":"success","id":"speech.getVoiceList","voice":["悲しさ独自スクリプト"]}')
-                except:
-                    if config.DEBUG_FLAG:
-                        print('except error....')
+            elif data['type'] == 'config':
+                voice_volume = str(round(float(data['data']['speech']['volume']) * 2.0 * float(config.VOICE_VOLUME), 2))
 
-            elif data['operation'] == 'translate':
-                await websocket.send('{"operation":"translate","params":[{"id":"hU0a-NZE","lang":"en_US","text":"おはようございます"}]}')
+                if float(data['data']['speech']['rate']) < 1.0:
+                    voice_speed = str(round(100.0 - ((1.0 - float(data['data']['speech']['rate'])) * 50.0 / 0.9)))
+                else:
+                    voice_speed = str(round(100.0 + ((float(data['data']['speech']['rate'] - 1.0) * 100.0 / 2.5))))
 
-            elif data['operation'] == 'speech':
+                if float(data['data']['speech']['pitch']) < 1.0:
+                    voice_pitch = str(round(0.0 - float(1.0 - data['data']['speech']['pitch']) * 300.0 / 0.9))
+                else:
+                    voice_pitch = str(round(float(data['data']['speech']['pitch'] - 1.0) * 300.0))
 
-                #idを決める
-                comment_id = str(uuid.uuid4())
+                if config.DEBUG_FLAG:
+                    print('わんコネの設定変更を反映しました')
+                    print('読み上げボリューム：' + voice_volume)
+                    print('読み上げ速度：' + voice_speed)
+                    print('読み上げピッチ：' + voice_pitch)
 
-                for comment_data in data["params"]:
+            elif data['type'] == 'comments':
 
-                    #タグの削除（絵文字や不具合文字なども含む）
-                    read_comment = str(comment_data["text"]).replace('&lt;', '<').replace('&gt;', '>')
-                    read_comment = re.compile(r"<[^>]*?>").sub(' 略 ', read_comment)
-                    read_comment = read_comment.replace("｀", "")
-                    read_comment = read_comment.replace("`", "")
-                    read_comment = read_comment.replace("\\", " ")
+                for commnent in data['data']['comments']:
 
-                    #半角カタカナを全角カタカナに
-                    read_comment = unicodedata.normalize('NFKC', read_comment)
+                    #読み上げるファイル名で使用する
+                    comment_id = str(uuid.uuid4())
+                    
+                    #送られてきたデータに読み上げるテキストがある場合のみ処理を行う
+                    if 'speechText' in commnent['data']:
 
-                    #コメントの改行やコーテーションを削除
-                    read_comment = read_comment.replace('\n', ' ').replace('&quot;', ' ').replace('&#39;', ' ').replace('"', ' ')
+                        #タグの削除（絵文字や不具合文字なども含む）
+                        read_comment = str(commnent['data']['speechText']).replace('&lt;', '<').replace('&gt;', '>')
+                        read_comment = re.compile(r"<[^>]*?>").sub(' 略 ', read_comment)
+                        read_comment = read_comment.replace("｀", "")
+                        read_comment = read_comment.replace("`", "")
+                        read_comment = read_comment.replace("\\", " ")
 
-                    #URL省略
-                    read_comment = re.sub('https?://[A-Za-z0-9_/:%#$&?()~.=+-]+?(?=https?:|[^A-Za-z0-9_/:%#$&?()~.=+-]|$)', ' URL略 ', read_comment)
+                        #半角カタカナを全角カタカナに
+                        read_comment = unicodedata.normalize('NFKC', read_comment)
 
-                    #読み上げファイル作成コマンド作成
-                    read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + config.VOICE_SPEED + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + config.VOICE_NARRATOR + '"'
+                        #コメントの改行やコーテーションを削除
+                        read_comment = read_comment.replace('\n', ' ').replace('&quot;', ' ').replace('&#39;', ' ').replace('"', ' ')
 
-                    #読み上げファイル作成
-                    for i in range(config.MAX_RETRY):
+                        #URL省略
+                        read_comment = re.sub('https?://[A-Za-z0-9_/:%#$&?()~.=+-]+?(?=https?:|[^A-Za-z0-9_/:%#$&?()~.=+-]|$)', ' URL略 ', read_comment)
+
+                        #読み上げファイル作成コマンド作成
+                        read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + config.VOICE_NARRATOR + '"'
                         if config.DEBUG_FLAG:
-                            #read_command_result = 1 #失敗テスト用
-                            read_command_result = subprocess.call([read_command], shell = True)
-                        else:
-                            read_command_result = subprocess.call([read_command], shell = True, stderr = subprocess.PIPE)
+                            print(read_command)
 
-                        if read_command_result == 0:
-                            #キューに追加する（別スレッドでデキューする）
-                            comment_que.put((comment_id, comment_data["volume"]))
-                            break
-                        elif i == config.MAX_RETRY - 1:
+                        #読み上げファイル作成
+                        for i in range(config.MAX_RETRY):
                             if config.DEBUG_FLAG:
-                                print('ファイル作成失敗 ' + str(i + 1) + '回目')
-                            comment_que.put((comment_id, comment_data["volume"]))
-                            break
-                        else:
-                            if config.DEBUG_FLAG:
-                                print('ファイル作成失敗 ' + str(i + 1) + '回目')
-                                print(read_command)
-                            time.sleep(0.5)
+                                #read_command_result = 1 #失敗テスト用
+                                read_command_result = subprocess.call([read_command], shell = True)
+                            else:
+                                read_command_result = subprocess.call([read_command], shell = True, stderr = subprocess.PIPE)
 
-                    #一応、クライアントに返す（意味ないカモだけど）
-                    await websocket.send('{"operation":"speech","status":"sended","id":"' + comment_id + '","text":"' + str(comment_data["text"]) + '","talker":"' + str(comment_data["talker"]) + '"}')
+                            if read_command_result == 0:
+                                #キューに追加する（別スレッドでデキューする）
+                                comment_que.put((comment_id, voice_volume))
+                                break
+                            elif i == config.MAX_RETRY - 1:
+                                if config.DEBUG_FLAG:
+                                    print('ファイル作成失敗 ' + str(i + 1) + '回目')
+                                comment_que.put((comment_id, voice_volume))
+                                break
+                            else:
+                                if config.DEBUG_FLAG:
+                                    print('ファイル作成失敗 ' + str(i + 1) + '回目')
+                                    print(read_command)
+                                time.sleep(0.5)
 
+                    else:
+                        if config.DEBUG_FLAG:
+                            print('わんコメの読み上げが有効になっていません : ' + commnent['service'])
+            
     except Exception as e:
         print('このスクリプトの異常動作もしくはわんコメのアプリケーション終了を検知しました。このスクリプトをctrl + cで終了してください')
         print(f"\"{e}\"")
@@ -105,8 +124,9 @@ async def ws_recv(websocket):
 async def ws_connect():
     
     try:
-        async with websockets.serve(ws_recv, "localhost", config.WEBSOCKET_PORT):
-            await asyncio.Future()
+        async with websockets.connect("ws://127.0.0.1:11180/sub") as websocket: #固定のため直書き
+            print('わんコメとの接続が完了しました。読み上げができる状態です')
+            await ws_recv(websocket)
 
     except Exception as e:
         print('WebSocketの接続ができません。このスクリプトをctrl + cで一度終了し、わんコメを立ち上げてから再度起動してください。')
@@ -131,8 +151,8 @@ def func_read():
         read_file_path = config.OUTPUT_VOICE_DIRPATH + '/vp_' + str(comment_tuple[0]) + '.wav'
         is_file = os.path.isfile(read_file_path)
 
-        #読み上げ音量（.envの設定にわんコメのスライダーと.envの設定を掛け合わせる）
-        read_volume = str(round(float(comment_tuple[1]) * float(config.VOICE_VOLUME), 2));
+        #読み上げ音量
+        read_volume = comment_tuple[1];
 
         if is_file:
             if config.DEBUG_FLAG:
@@ -168,7 +188,7 @@ if __name__ == '__main__':
     #コメントデータキュー
     comment_que = Queue()
 
-    print('スクリプト起動... 読み上げ開始まで最大30秒程度おまちください...')
+    print('スクリプト起動...')
     with ThreadPoolExecutor() as executor:
         executor.submit(func_make) #コメント音声データ作成スレッド
         executor.submit(func_read) #コメント読み上げ処理スレッド
