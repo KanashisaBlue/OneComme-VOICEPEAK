@@ -125,7 +125,7 @@ async def ws_connect():
     
     try:
         async with websockets.connect("ws://127.0.0.1:11180/sub") as websocket: #固定のため直書き
-            print('わんコメとの接続が完了しました。読み上げができる状態です')
+            print('わんコメとの接続が完了しました。')
             await ws_recv(websocket)
 
     except Exception as e:
