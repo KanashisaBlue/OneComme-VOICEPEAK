@@ -3,7 +3,7 @@
 # https://opensource.org/licenses/mit-license.php
 
 # わんコメ-VOICEPEAK 連携スクリプト（公開WebSocket API版 / わんコメ バージョン5以降をご利用ください）
-# v2.0.0
+# v2.0.1
 
 import config
 import json
@@ -29,6 +29,9 @@ async def ws_recv(websocket):
         voice_volume = config.VOICE_VOLUME
         voice_speed = '100'
         voice_pitch = '0'
+
+        #重複読み上げ対策用にコメントIDを保存していく
+        read_ids = set()
 
         while True:
             
@@ -68,49 +71,59 @@ async def ws_recv(websocket):
                     #送られてきたデータに読み上げるテキストがある場合のみ処理を行う
                     if 'speechText' in commnent['data']:
 
-                        #タグの削除（絵文字や不具合文字なども含む）
-                        read_comment = str(commnent['data']['speechText']).replace('&lt;', '<').replace('&gt;', '>')
-                        read_comment = re.compile(r"<[^>]*?>").sub(' 略 ', read_comment)
-                        read_comment = read_comment.replace("｀", "")
-                        read_comment = read_comment.replace("`", "")
-                        read_comment = read_comment.replace("\\", " ")
-
-                        #半角カタカナを全角カタカナに
-                        read_comment = unicodedata.normalize('NFKC', read_comment)
-
-                        #コメントの改行やコーテーションを削除
-                        read_comment = read_comment.replace('\n', ' ').replace('&quot;', ' ').replace('&#39;', ' ').replace('"', ' ')
-
-                        #URL省略
-                        read_comment = re.sub('https?://[A-Za-z0-9_/:%#$&?()~.=+-]+?(?=https?:|[^A-Za-z0-9_/:%#$&?()~.=+-]|$)', ' URL略 ', read_comment)
-
-                        #読み上げファイル作成コマンド作成
-                        read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + config.VOICE_NARRATOR + '"'
+                        #コメントIDを出力
                         if config.DEBUG_FLAG:
-                            print(read_command)
+                            print(commnent['data']['id'])
 
-                        #読み上げファイル作成
-                        for i in range(config.MAX_RETRY):
+                        #重複読み上げを防ぐために過去に読み上げたコメントIDをチェック
+                        if commnent['data']['id'] not in read_ids:
+
+                            #タグの削除（絵文字や不具合文字なども含む）
+                            read_comment = str(commnent['data']['speechText']).replace('&lt;', '<').replace('&gt;', '>')
+                            read_comment = re.compile(r"<[^>]*?>").sub(' 略 ', read_comment)
+                            read_comment = read_comment.replace("｀", "")
+                            read_comment = read_comment.replace("`", "")
+                            read_comment = read_comment.replace("\\", " ")
+
+                            #半角カタカナを全角カタカナに
+                            read_comment = unicodedata.normalize('NFKC', read_comment)
+
+                            #コメントの改行やコーテーションを削除
+                            read_comment = read_comment.replace('\n', ' ').replace('&quot;', ' ').replace('&#39;', ' ').replace('"', ' ')
+
+                            #URL省略
+                            read_comment = re.sub('https?://[A-Za-z0-9_/:%#$&?()~.=+-]+?(?=https?:|[^A-Za-z0-9_/:%#$&?()~.=+-]|$)', ' URL略 ', read_comment)
+
+                            #読み上げファイル作成コマンド作成
+                            read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + config.VOICE_NARRATOR + '"'
                             if config.DEBUG_FLAG:
-                                #read_command_result = 1 #失敗テスト用
-                                read_command_result = subprocess.call([read_command], shell = True)
-                            else:
-                                read_command_result = subprocess.call([read_command], shell = True, stderr = subprocess.PIPE)
+                                print(read_command)
 
-                            if read_command_result == 0:
-                                #キューに追加する（別スレッドでデキューする）
-                                comment_que.put((comment_id, voice_volume))
-                                break
-                            elif i == config.MAX_RETRY - 1:
+                            #読み上げファイル作成
+                            for i in range(config.MAX_RETRY):
                                 if config.DEBUG_FLAG:
-                                    print('ファイル作成失敗 ' + str(i + 1) + '回目')
-                                comment_que.put((comment_id, voice_volume))
-                                break
-                            else:
-                                if config.DEBUG_FLAG:
-                                    print('ファイル作成失敗 ' + str(i + 1) + '回目')
-                                    print(read_command)
-                                time.sleep(0.5)
+                                    #read_command_result = 1 #失敗テスト用
+                                    read_command_result = subprocess.call([read_command], shell = True)
+                                else:
+                                    read_command_result = subprocess.call([read_command], shell = True, stderr = subprocess.PIPE)
+
+                                if read_command_result == 0:
+                                    #キューに追加する（別スレッドでデキューする）
+                                    comment_que.put((comment_id, voice_volume))
+
+                                    #コメントIDを保存
+                                    read_ids.add(commnent['data']['id'])
+                                    break
+                                elif i == config.MAX_RETRY - 1:
+                                    if config.DEBUG_FLAG:
+                                        print('ファイル作成失敗 ' + str(i + 1) + '回目')
+                                    comment_que.put((comment_id, voice_volume))
+                                    break
+                                else:
+                                    if config.DEBUG_FLAG:
+                                        print('ファイル作成失敗 ' + str(i + 1) + '回目')
+                                        print(read_command)
+                                    time.sleep(0.5)
 
                     else:
                         if config.DEBUG_FLAG:
