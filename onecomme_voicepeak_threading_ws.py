@@ -3,7 +3,7 @@
 # https://opensource.org/licenses/mit-license.php
 
 # わんコメ-VOICEPEAK 連携スクリプト（公開WebSocket API版 / わんコメ バージョン5以降をご利用ください）
-# v2.0.1
+# v2.0.2
 
 import config
 import json
@@ -39,10 +39,30 @@ async def ws_recv(websocket):
             data = json.loads(await websocket.recv())
 
             if data['type'] == 'connected':
+
                 if config.DEBUG_FLAG:
                     print('わんコネからの接続情報を確認しました')
 
+                voice_volume = str(round(float(data['data']['config']['speech']['volume']) * 2.0 * float(config.VOICE_VOLUME), 2))
+
+                if float(data['data']['config']['speech']['rate']) < 1.0:
+                    voice_speed = str(round(100.0 - ((1.0 - float(data['data']['config']['speech']['rate'])) * 50.0 / 0.9)))
+                else:
+                    voice_speed = str(round(100.0 + ((float(data['data']['config']['speech']['rate'] - 1.0) * 100.0 / 2.5))))
+
+                if float(data['data']['config']['speech']['pitch']) < 1.0:
+                    voice_pitch = str(round(0.0 - float(1.0 - data['data']['config']['speech']['pitch']) * 300.0 / 0.9))
+                else:
+                    voice_pitch = str(round(float(data['data']['config']['speech']['pitch'] - 1.0) * 300.0))
+
+                if config.DEBUG_FLAG:
+                    print('わんコネの初期設定をしました')
+                    print('読み上げボリューム：' + voice_volume)
+                    print('読み上げ速度：' + voice_speed)
+                    print('読み上げピッチ：' + voice_pitch)
+
             elif data['type'] == 'config':
+
                 voice_volume = str(round(float(data['data']['speech']['volume']) * 2.0 * float(config.VOICE_VOLUME), 2))
 
                 if float(data['data']['speech']['rate']) < 1.0:
