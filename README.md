@@ -9,6 +9,10 @@ Windowsを利用されている方は「ゆかコネNEO」を利用された方�
 https://nmori.github.io/yncneo-Docs/
 
 このPythonスクリプトはゆかコネNEOが利用できない環境（主にMacOS）での利用を想定しています。  
+Pythonに関する知識はほぼ必要ありませんが、「ターミナル」というアプリを起動してコマンドを叩き、Pythonスクリプトを起動させるというレベルくらいの知識は必要です。頑張りたい方は以下のページを見て勉強してください。
+
+初心者向け！5分で分かるMacターミナルの使い方 基礎コマンドも紹介  
+https://tech-camp.in/note/technology/18730/
 
 # Caution
 
@@ -24,7 +28,7 @@ https://nmori.github.io/yncneo-Docs/
 Intel CPUのMacOS上にて動作確認を行っていますが、AppleシリコンのMacOS上でもたぶん動作します。  
 
 #### ■Python（3.11系以降）
-動作確認できているのはバージョン3.12.1とバージョン3.11.6です。  
+動作確認できているのはバージョン3.12〜3.12.2とバージョン3.11.6です。  
 おそらくバージョン3.11以降で動作すると思いますが、動作確認できている3.11.6以降をお勧めします。  
 MacOS標準で入ってるPythonはバージョンが古いので、3.11系以降のPythonを別途インストールしてください。  
 インストーラーで入れる方法もあるようですが、pyenvを使って入れる方法の方が後々の管理も楽ですので、個人的にはこちらをお勧めします。  
@@ -48,7 +52,7 @@ https://onecomme.com/
 https://onecomme.com/terms/
 
 #### ■VOICEPEAK 商用可能6ナレーターセット（コマンドラインでの読み上げに対応したアプリケーション及びバージョン）
-（バージョン1.2.7で動作確認済み。ただし、バージョン1.2.5だと不具合があるので、バージョン1.2.6以降にしてください）
+（バージョン1.2.6以降で動作確認済み。バージョン1.2.5だと不具合あり、正しく読み上げが行われません）
 
 VOICEPEAK 商用可能6ナレーターセット  
 https://www.ah-soft.com/voice/6nare/
@@ -57,6 +61,7 @@ https://www.ah-soft.com/voice/6nare/
 https://www.ah-soft.com/voice/6nare/eula.html
 
 VOICEPEAKのキャラクター製品シリーズでは動作確認をしていませんが、設定（.env）を調整することで使えると思います。  
+（このスクリプトで「VOICEPEAK ずんだもん」を読み上げることに成功した方がいるのは確認しています）  
 個人利用でもキャラクターにより許諾範囲が違うみたいなので、詳しくはこちらをご覧ください。  
 https://www.ah-soft.com/commercial/voicepeak/private/
 
@@ -70,7 +75,7 @@ https://github.com/KanashisaBlue/OneComme-VOICEPEAK/archive/refs/tags/v1.0.4.zip
 
 .env.example ファイルを .env にリネームして、必要に応じて内容を変更してください（変更しなくても動くとは思いますが、VOICEPEAKをデフォルトの場所以外にインストールしてる場合などは変更が必要になります）
 
-## v2.0.0以降をご利用の方のみ
+## v2.0.0以降（わんコメAPIを使用しているバージョン）をご利用の方のみ
 
 まず、わんコメを「起動した状態」にしてください。  
 
@@ -84,7 +89,7 @@ https://github.com/KanashisaBlue/OneComme-VOICEPEAK/archive/refs/tags/v1.0.4.zip
 ※わんコメの仕様により、VOICEPEAKの読み上げとわんコメのシステムの読み上げが同時に両方読み上げられてしまう不具合が発生します。回避方法は以下のブログをご覧ください。  
 https://kanashisa.blue/2023/12/10/onecomme-voicepeak/
 
-## v1.0系をご利用の方のみ
+## v1.0系（WebSocketを使用しているバージョン）をご利用の方のみ
 
 まず、わんコメを「終了した状態」にしてください。  
 
