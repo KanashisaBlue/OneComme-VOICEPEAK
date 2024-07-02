@@ -98,6 +98,12 @@ async def ws_recv(websocket):
                         #重複読み上げを防ぐために過去に読み上げたコメントIDをチェック
                         if commnent['data']['id'] not in read_ids:
 
+                            #コメントの感情の初期値
+                            happy = '0'
+                            sad = '0'
+                            fun = '0'
+                            angry = '0'
+
                             #タグの削除（絵文字や不具合文字なども含む）
                             read_comment = str(commnent['data']['speechText']).replace('&lt;', '<').replace('&gt;', '>')
                             read_comment = re.compile(r"<[^>]*?>").sub(' 略 ', read_comment)
@@ -114,8 +120,18 @@ async def ws_recv(websocket):
                             #URL省略
                             read_comment = re.sub('https?://[A-Za-z0-9_/:%#$&?()~.=+-]+?(?=https?:|[^A-Za-z0-9_/:%#$&?()~.=+-]|$)', ' URL略 ', read_comment)
 
+                            #絵文字から感情データを追加
+                            if '😊' in read_comment:
+                                happy = '100'
+                            if '😢' in read_comment:
+                                sad = '100'
+                            if '😆' in read_comment:
+                                fun = '100'
+                            if '😡' in read_comment:
+                                angry = '100'
+
                             #読み上げファイル作成コマンド作成
-                            read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + config.VOICE_NARRATOR + '"'
+                            read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + config.VOICE_NARRATOR + '"' + ' -e happy=' + happy + ',sad=' + sad + ',fun=' + fun + ',angry=' + angry 
                             if config.DEBUG_FLAG:
                                 print(read_command)
 
