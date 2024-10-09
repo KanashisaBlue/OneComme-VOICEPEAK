@@ -1,9 +1,9 @@
-# Copyright (c) 2023 悲しさ（ https://x.com/KanashisaBlue ）
+# Copyright (c) 2023-2024 悲しさ（ https://x.com/KanashisaBlue ）
 # Released under the MIT license
 # https://opensource.org/licenses/mit-license.php
 
-# わんコメ-VOICEPEAK 連携スクリプト（公開WebSocket API版 / わんコメ バージョン5以降をご利用ください）
-# v2.0.2
+# わんコメ-VOICEPEAK 連携スクリプト（わんコメ バージョン5以降をご利用ください）
+# v2.2.0
 
 import config
 import json
@@ -16,6 +16,7 @@ import websockets
 import uuid
 import time
 import signal
+import random
 
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
@@ -91,9 +92,12 @@ async def ws_recv(websocket):
                     #送られてきたデータに読み上げるテキストがある場合のみ処理を行う
                     if 'speechText' in commnent['data']:
 
+                        #ラインを出力
+                        print('------')
+
                         #コメントIDを出力
                         if config.DEBUG_FLAG:
-                            print(commnent['data']['id'])
+                            print('コメントID : ' + commnent['data']['id'])
 
                         #重複読み上げを防ぐために過去に読み上げたコメントIDをチェック
                         if commnent['data']['id'] not in read_ids:
@@ -130,8 +134,19 @@ async def ws_recv(websocket):
                             if '😡' in read_comment:
                                 angry = '100'
 
+                            #コメントの文字数がオーバーした場合は強制カットして、以下略をつける（v2.2.0で追加実装）
+                            if len(read_comment) > config.MAX_NUM_CHARACTERS:
+                                read_comment = read_comment[:config.MAX_NUM_CHARACTERS] + ' 以下略'
+
+                            #読み上げボイスをランダムにする（v2.2.0で追加実装）
+                            read_voice_narrator = config.VOICE_NARRATOR
+                            if config.VOICE_NARRATOR == 'Japanese Female x':
+                                read_voice_narrator = 'Japanese Female ' + str(random.randrange(1, 4, 1))
+                            if config.VOICE_NARRATOR == 'Japanese Male x':
+                                read_voice_narrator = 'Japanese Male ' + str(random.randrange(1, 4, 1))
+
                             #読み上げファイル作成コマンド作成
-                            read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + config.VOICE_NARRATOR + '"' + ' -e happy=' + happy + ',sad=' + sad + ',fun=' + fun + ',angry=' + angry 
+                            read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + read_voice_narrator + '"' + ' -e happy=' + happy + ',sad=' + sad + ',fun=' + fun + ',angry=' + angry 
                             if config.DEBUG_FLAG:
                                 print(read_command)
 

@@ -6,12 +6,13 @@ load_dotenv(override = True)
 
 # 環境変数を参照
 import os
-VOICE_NARRATOR = os.getenv('VOICE_NARRATOR')
-VOICE_VOLUME = os.getenv('VOICE_VOLUME')
+VOICE_NARRATOR = 'Japanese Female 1' if os.getenv('VOICE_NARRATOR') == None else os.getenv('VOICE_NARRATOR')
+VOICE_VOLUME = '0.15' if os.getenv('VOICE_VOLUME') == None else os.getenv('VOICE_VOLUME')
 
-DEBUG_FLAG = bool(strtobool(os.getenv('DEBUG_FLAG')))
+MAX_NUM_CHARACTERS = 136 if os.getenv('MAX_NUM_CHARACTERS') == None else int(os.getenv('MAX_NUM_CHARACTERS'))
+DEBUG_FLAG = False if os.getenv('DEBUG_FLAG') == None else bool(strtobool(os.getenv('DEBUG_FLAG')))
 EXCEPTION_OUTPUT_VOICE_FILEPATH = os.getenv('EXCEPTION_OUTPUT_VOICE_FILEPATH')
-MAX_RETRY = int(os.getenv('MAX_RETRY'))
-VOICEPEAK_APP_FILEPATH = os.getenv('VOICEPEAK_APP_FILEPATH')
-AFPLAY_FILEPATH = os.getenv('AFPLAY_FILEPATH')
-OUTPUT_VOICE_DIRPATH = os.getenv('OUTPUT_VOICE_DIRPATH')
+MAX_RETRY = 3 if os.getenv('MAX_RETRY') == None else int(os.getenv('MAX_RETRY'))
+VOICEPEAK_APP_FILEPATH = '/Applications/voicepeak.app/Contents/MacOS/voicepeak' if os.getenv('VOICEPEAK_APP_FILEPATH') == None else os.getenv('VOICEPEAK_APP_FILEPATH')
+AFPLAY_FILEPATH = '/usr/bin/afplay' if os.getenv('AFPLAY_FILEPATH') == None else os.getenv('AFPLAY_FILEPATH')
+OUTPUT_VOICE_DIRPATH = '/tmp' if os.getenv('OUTPUT_VOICE_DIRPATH') == None else os.getenv('OUTPUT_VOICE_DIRPATH')
