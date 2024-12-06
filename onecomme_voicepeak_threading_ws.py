@@ -3,7 +3,7 @@
 # https://opensource.org/licenses/mit-license.php
 
 # わんコメ-VOICEPEAK 連携スクリプト（わんコメ バージョン5以降をご利用ください）
-# v2.2.0
+# v2.4.0
 
 import config
 import json
@@ -93,7 +93,8 @@ async def ws_recv(websocket):
                     if 'speechText' in commnent['data']:
 
                         #ラインを出力
-                        print('------')
+                        if config.DEBUG_FLAG:
+                            print('------')
 
                         #コメントIDを出力
                         if config.DEBUG_FLAG:
@@ -103,10 +104,15 @@ async def ws_recv(websocket):
                         if commnent['data']['id'] not in read_ids:
 
                             #コメントの感情の初期値
-                            happy = '0'
-                            sad = '0'
-                            fun = '0'
-                            angry = '0'
+                            happy = config.EMOTION_HAPPY
+                            sad = config.EMOTION_SAD
+                            fun = config.EMOTION_FUN
+                            angry = config.EMOTION_ANGRY
+                            bosoboso = config.EMOTION_BOSOBOSO
+                            doyaru = config.EMOTION_DOYARU
+                            honwaka = config.EMOTION_HONWAKA
+                            teary = config.EMOTION_TEARY
+                            ochoushimono = config.EMOTION_OCHOUSHIMONO
 
                             #タグの削除（絵文字や不具合文字なども含む）
                             read_comment = str(commnent['data']['speechText']).replace('&lt;', '<').replace('&gt;', '>')
@@ -125,14 +131,22 @@ async def ws_recv(websocket):
                             read_comment = re.sub('https?://[A-Za-z0-9_/:%#$&?()~.=+-]+?(?=https?:|[^A-Za-z0-9_/:%#$&?()~.=+-]|$)', ' URL略 ', read_comment)
 
                             #絵文字から感情データを追加
-                            if '😊' in read_comment:
-                                happy = '100'
-                            if '😢' in read_comment:
-                                sad = '100'
-                            if '😆' in read_comment:
-                                fun = '100'
-                            if '😡' in read_comment:
-                                angry = '100'
+                            print(config.EMOTION_COMMENT)
+                            if config.EMOTION_COMMENT:
+                                if '😊' in read_comment:
+                                    happy = '100'
+                                    honwaka = '100'
+                                if '😢' in read_comment:
+                                    sad = '100'
+                                    teary = '100'
+                                if '😆' in read_comment:
+                                    fun = '100'
+                                    doyaru = '100'
+                                    ochoushimono = '100'
+                                if '😡' in read_comment:
+                                    angry = '100'
+                                if '😶‍🌫️' in read_comment:
+                                    bosoboso = '100'
 
                             #コメントの文字数がオーバーした場合は強制カットして、以下略をつける（v2.2.0で追加実装）
                             if len(read_comment) > config.MAX_NUM_CHARACTERS:
@@ -146,7 +160,16 @@ async def ws_recv(websocket):
                                 read_voice_narrator = 'Japanese Male ' + str(random.randrange(1, 4, 1))
 
                             #読み上げファイル作成コマンド作成
-                            read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + read_voice_narrator + '"' + ' -e happy=' + happy + ',sad=' + sad + ',fun=' + fun + ',angry=' + angry 
+                            if 'Japanese' in read_voice_narrator:
+                                read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + read_voice_narrator + '"' + ' -e happy=' + happy + ',sad=' + sad + ',fun=' + fun + ',angry=' + angry
+                            elif 'Miyamai Moca' in read_voice_narrator:
+                                read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + read_voice_narrator + '"' + ' -e bosoboso=' + bosoboso + ',doyaru=' + doyaru + ',honwaka=' + honwaka + ',angry=' + angry + ',teary=' + teary
+                            elif 'Frimomen' in read_voice_narrator:
+                                read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + read_voice_narrator + '"' + ' -e happy=' + happy + ',angry=' + angry + ',sad=' + sad + ',ochoushimono=' + ochoushimono
+                            else:
+                                read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + read_voice_narrator + '"'
+
+
                             if config.DEBUG_FLAG:
                                 print(read_command)
 
