@@ -3,7 +3,7 @@
 # https://opensource.org/licenses/mit-license.php
 
 # わんコメ-VOICEPEAK 連携スクリプト（わんコメ バージョン5以降をご利用ください）
-# v2.4.0
+# v2.4.1
 
 import config
 import json
@@ -131,7 +131,6 @@ async def ws_recv(websocket):
                             read_comment = re.sub('https?://[A-Za-z0-9_/:%#$&?()~.=+-]+?(?=https?:|[^A-Za-z0-9_/:%#$&?()~.=+-]|$)', ' URL略 ', read_comment)
 
                             #絵文字から感情データを追加
-                            print(config.EMOTION_COMMENT)
                             if config.EMOTION_COMMENT:
                                 if '😊' in read_comment:
                                     happy = '100'
@@ -148,16 +147,25 @@ async def ws_recv(websocket):
                                 if '😶‍🌫️' in read_comment:
                                     bosoboso = '100'
 
-                            #コメントの文字数がオーバーした場合は強制カットして、以下略をつける（v2.2.0で追加実装）
+                            #コメントの文字数がオーバーした場合は強制カットして、以下略をつける
                             if len(read_comment) > config.MAX_NUM_CHARACTERS:
                                 read_comment = read_comment[:config.MAX_NUM_CHARACTERS] + ' 以下略'
 
-                            #読み上げボイスをランダムにする（v2.2.0で追加実装）
+                            #読み上げボイスをランダムにする
                             read_voice_narrator = config.VOICE_NARRATOR
                             if config.VOICE_NARRATOR == 'Japanese Female x':
                                 read_voice_narrator = 'Japanese Female ' + str(random.randrange(1, 4, 1))
                             if config.VOICE_NARRATOR == 'Japanese Male x':
                                 read_voice_narrator = 'Japanese Male ' + str(random.randrange(1, 4, 1))
+
+                            #読み上げの性別変更
+                            if config.SEX_COMMENT:
+                                if '👨' in read_comment and read_voice_narrator != 'Japanese Female Child':
+                                    read_voice_narrator = read_voice_narrator.replace('Female', 'Male')
+                                    read_voice_narrator = read_voice_narrator.replace('Miyamai Moca', 'Frimomen')
+                                if '👩' in read_comment:
+                                    read_voice_narrator = read_voice_narrator.replace('Male', 'Female')
+                                    read_voice_narrator = read_voice_narrator.replace('Frimomen', 'Miyamai Moca')
 
                             #読み上げファイル作成コマンド作成
                             if 'Japanese' in read_voice_narrator:
@@ -168,7 +176,6 @@ async def ws_recv(websocket):
                                 read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + read_voice_narrator + '"' + ' -e happy=' + happy + ',angry=' + angry + ',sad=' + sad + ',ochoushimono=' + ochoushimono
                             else:
                                 read_command = config.VOICEPEAK_APP_FILEPATH + ' -s "' + read_comment + '" --speed ' + voice_speed  + ' --pitch ' + voice_pitch + ' -o ' + config.OUTPUT_VOICE_DIRPATH + '/vp_' + comment_id + '.wav -n "' + read_voice_narrator + '"'
-
 
                             if config.DEBUG_FLAG:
                                 print(read_command)

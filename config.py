@@ -18,7 +18,8 @@ EMOTION_DOYARU = '0' if os.getenv('EMOTION_DOYARU') == None else os.getenv('EMOT
 EMOTION_HONWAKA = '0' if os.getenv('EMOTION_HONWAKA') == None else os.getenv('EMOTION_HONWAKA')
 EMOTION_TEARY = '0' if os.getenv('EMOTION_TEARY') == None else os.getenv('EMOTION_TEARY')
 EMOTION_OCHOUSHIMONO = '0' if os.getenv('EMOTION_OCHOUSHIMONO') == None else os.getenv('EMOTION_OCHOUSHIMONO')
-EMOTION_COMMENT = False if os.getenv('EMOTION_COMMENT') == None else os.getenv('EMOTION_COMMENT')
+EMOTION_COMMENT = True if os.getenv('EMOTION_COMMENT') == None else os.getenv('EMOTION_COMMENT')
+SEX_COMMENT = True if os.getenv('SEX_COMMENT') == None else os.getenv('SEX_COMMENT')
 
 MAX_NUM_CHARACTERS = 136 if os.getenv('MAX_NUM_CHARACTERS') == None else int(os.getenv('MAX_NUM_CHARACTERS'))
 DEBUG_FLAG = False if os.getenv('DEBUG_FLAG') == None else bool(strtobool(os.getenv('DEBUG_FLAG')))
